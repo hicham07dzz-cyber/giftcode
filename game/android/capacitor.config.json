@@ -1,0 +1,9 @@
+{
+  "appId": "com.github.neonrift",
+  "appName": "NEON RIFT",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
