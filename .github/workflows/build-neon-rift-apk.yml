@@ -45,8 +45,8 @@ jobs:
       - name: Prepare web game
         run: |
           mkdir -p game/android/www
-          cp -R game/. game/android/www/
-          rm -rf game/android/www/android game/android/www/www
+          cp game/index.html game/README.md game/android/www/
+          cp -R game/assets game/android/www/assets
 
       - name: Install Capacitor
         working-directory: game/android
