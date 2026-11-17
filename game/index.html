@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080b18"><meta name="description" content="NEON RIFT — لعبة ركض فضائية بمراحل وتحديات ومكافآت.">
+<title>NEON RIFT — صدع النيون</title>
+<style>
+:root{--bg:#080b18;--panel:#10172a;--cyan:#52f6ff;--pink:#ff4db8;--gold:#ffd36a;--muted:#9aa9c5}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;touch-action:none}
+body{background:radial-gradient(ellipse at 50% 5%,#182447 0%,#090e20 48%,#050711 100%)}
+button{font:inherit;color:inherit;border:1px solid #ffffff20;background:#18233d;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px #0005}
+button:active{transform:scale(.96)}button.primary{background:linear-gradient(110deg,#1ac8d5,#6678ff);color:#07101d;border:0;box-shadow:0 8px 28px #31dce655}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:auto;padding:10px;gap:8px}
+.top{height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:1000;letter-spacing:2px;font-size:16px}.brand img{width:42px;height:42px;filter:drop-shadow(0 0 10px #52f6ff70)}
+.top-actions{display:flex;gap:7px}.top-actions button{padding:9px 12px;font-size:12px}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.stat{background:#10182acc;border:1px solid #ffffff14;border-radius:12px;padding:7px 10px;text-align:center}.stat small{display:block;color:var(--muted);font-size:10px}.stat b{font-size:17px;color:var(--cyan)}
+.arena{position:relative;flex:1;min-height:220px;border:1px solid #6deaff40;border-radius:20px;overflow:hidden;background:#080e20;box-shadow:0 0 40px #0cc7d31a,inset 0 0 45px #091c37}
+canvas{display:block;width:100%;height:100%}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(180deg,#070b18b8,#070b18df);backdrop-filter:blur(7px);text-align:center}
+.panel{width:min(100%,440px);max-height:100%;overflow:auto;background:linear-gradient(145deg,#172441f2,#0b1124f5);border:1px solid #68eaff55;border-radius:22px;padding:20px;box-shadow:0 0 55px #1ad6e622}
+.logo{width:112px;height:112px;margin:0 auto 8px;filter:drop-shadow(0 0 22px #44eaff80)}
+h1{font-size:clamp(26px,6vw,40px);letter-spacing:3px;margin:3px 0;color:#fff;text-shadow:0 0 18px #50edff88}
+.sub{color:var(--cyan);font-weight:800;letter-spacing:2px;font-size:11px}
+.desc{color:#bac8df;line-height:1.7;font-size:13px;margin:10px 0 16px}
+.actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}.tiny{font-size:11px;color:#9daecc;margin-top:12px}
+.progress{height:7px;background:#26334d;border-radius:9px;overflow:hidden;margin:9px 0}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#9d7bff);width:0%;transition:width .2s}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:13px 0}.level{padding:9px 2px;font-size:12px;border-radius:10px}.level.locked{opacity:.35;filter:grayscale(1)}.level.current{border-color:var(--cyan);box-shadow:0 0 14px #52f6ff44}
+.controls{display:flex;justify-content:center;gap:10px;padding-bottom:4px}.controls button{min-width:65px;padding:10px 15px;font-size:18px;touch-action:none}.controls .jump{min-width:112px;background:linear-gradient(110deg,#9c52ff,#ed4db8);border:0}
+.footer{height:16px;text-align:center;color:#6d7e9e;font-size:9px;letter-spacing:1px}
+.hidden{display:none!important}
+@media(min-width:700px){#app{padding:14px}.arena{border-radius:24px}.controls button{min-width:84px}}
+</style>
+</head>
+<body>
+<div id="app">
+ <header class="top">
+  <div class="brand"><img src="assets/logo.svg" alt="NEON RIFT"><span>NEON <span style="color:var(--cyan)">RIFT</span></span></div>
+  <div class="top-actions"><button id="soundBtn" aria-label="الصوت">♫ الصوت</button><button id="pauseBtn">Ⅱ إيقاف</button></div>
+ </header>
+ <section class="hud">
+  <div class="stat"><small>المرحلة</small><b id="stage">01 / 12</b></div>
+  <div class="stat"><small>الطاقة المجمعة</small><b id="shards">0 / 12</b></div>
+  <div class="stat"><small>أفضل نتيجة</small><b id="best">0</b></div>
+ </section>
+ <main class="arena" id="arena">
+  <canvas id="game"></canvas>
+  <div class="overlay" id="menu">
+   <div class="panel">
+    <img class="logo" src="assets/logo.svg" alt="">
+    <div class="sub">رحلة عبر المجرّات • 12 عالماً</div>
+    <h1>NEON RIFT</h1>
+    <p class="desc">انطلق عبر بوابات النيون، اجمع شظايا الطاقة، تفادَ الحواجز وافتح عوالم جديدة. كل مرحلة أسرع وأذكى من السابقة!</p>
+    <div class="actions"><button class="primary" id="startBtn">ابدأ المغامرة ◈</button><button id="levelsBtn">المراحل</button></div>
+    <div class="tiny">اسحب يميناً ويساراً لتغيير المسار • اضغط للقفز • اجمع الشظايا</div>
+   </div>
+  </div>
+  <div class="overlay hidden" id="levelMenu"><div class="panel"><div class="sub">اختر وجهتك</div><h1>العوالم</h1><div class="levels" id="levelGrid"></div><button id="backBtn">رجوع</button></div></div>
+  <div class="overlay hidden" id="result"><div class="panel"><div class="sub" id="resultTag">إنجاز رائع</div><h1 id="resultTitle">مرحلة مكتملة!</h1><p class="desc" id="resultText"></p><div class="actions"><button class="primary" id="nextBtn">المرحلة التالية ←</button><button id="retryBtn">إعادة</button><button id="homeBtn">الرئيسية</button></div></div></div>
+  <div class="overlay hidden" id="pause"><div class="panel"><div class="sub">توقف مؤقت</div><h1>استراحة قصيرة</h1><p class="desc">المجرة تنتظرك…</p><button class="primary" id="resumeBtn">متابعة اللعب</button></div></div>
+ </main>
+ <nav class="controls"><button id="leftBtn">◀</button><button class="jump" id="jumpBtn">قفز ✦</button><button id="rightBtn">▶</button></nav>
+ <div class="footer">NEON RIFT • MADE FOR THE NEXT ADVENTURE</div>
+</div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
+const themes=[['بوابة البداية','#52f6ff','#ff4db8'],['مدينة الكريستال','#8df5ff','#8b7bff'],['مدار المريخ','#ff986a','#ffe16a'],['غابة الضوء','#7dffb2','#52eaff'],['سديم البنفسج','#d49aff','#ff6cce'],['قلب الجليد','#9eeaff','#ffffff'],['صحراء النجوم','#ffd36a','#ff8b5c'],['مجرة الظلال','#9e9bff','#52f6ff'],['حلقة العمالقة','#ff79a8','#ffd36a'],['العاصفة الزرقاء','#52aaff','#c5faff'],['بوابة الكسوف','#ffbd68','#c18aff'],['النواة الأخيرة','#ffffff','#52f6ff']];
+let W=0,H=0,dpr=1,mode='menu',lane=1,jump=0,world=0,shards=0,score=0,best=Number(localStorage.getItem('nr-best')||0),unlocked=Number(localStorage.getItem('nr-unlocked')||1),objects=[],particles=[],distance=0,speed=260,spawn=0,last=0,raf=0,sound=true,audio=null,shake=0;
+const target=12;
+$('best').textContent=best;
+function resize(){const r=$('arena').getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resize).observe($('arena'));resize();
+function tone(f=440,d=.08,type='sine',vol=.035){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch(e){}}
+function music(){if(!sound)return;[261,329,392,523].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.018),i*100))}
+function ui(id,show){$(id).classList.toggle('hidden',!show)}
+function hud(){$('stage').textContent=String(world+1).padStart(2,'0')+' / 12';$('shards').textContent=shards+' / '+target;$('best').textContent=best}
+function buildLevels(){const g=$('levelGrid');g.innerHTML='';themes.forEach((t,i)=>{const b=document.createElement('button');b.className='level'+(i+1>unlocked?' locked':'')+(i===world?' current':'');b.textContent=(i+1>unlocked?'🔒 ':'✦ ')+(i+1);b.disabled=i+1>unlocked;b.title=t[0];b.onclick=()=>{world=i;hud();ui('levelMenu',false);start()};g.append(b)})}
+function start(){mode='play';lane=1;jump=0;shards=0;score=0;distance=0;speed=260+world*17;spawn=.4;objects=[];particles=[];last=performance.now();ui('menu',false);ui('result',false);ui('pause',false);ui('levelMenu',false);$('pauseBtn').textContent='Ⅱ إيقاف';hud();music();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+function pause(){if(mode==='play'){mode='pause';ui('pause',true);$('pauseBtn').textContent='▶ متابعة'}else if(mode==='pause'){resume()}}
+function resume(){mode='play';ui('pause',false);$('pauseBtn').textContent='Ⅱ إيقاف';last=performance.now();raf=requestAnimationFrame(loop)}
+function move(n){if(mode!=='play')return;lane=Math.max(0,Math.min(2,lane+n));tone(220+lane*80,.05,'square',.02)}
+function leap(){if(mode!=='play')return;if(jump<=0){jump=.72;tone(620,.12,'sine',.04)}}
+function spawnObject(){const l=Math.floor(Math.random()*3),isShard=Math.random()<.58;objects.push({lane:l,z:0,type:isShard?'shard':'block',spin:Math.random()*6})}
+function playerY(){return H*.78-jump*H*.42}
+function roadX(l,z){const horizon=H*.24,base=H*.92,spread=W*.42;const p=Math.min(1,z);return W/2+(l-1)*spread*(.12+p*.88)}
+function scaleZ(z){return .25+z*1.1}
+function burst(x,y,color){for(let i=0;i<9;i++)particles.push({x,y,vx:(Math.random()-.5)*170,vy:(Math.random()-.5)*170,life:.55,color})}
+function draw(){const t=themes[world],bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#090d20');bg.addColorStop(1,'#101b35');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ const starCount=55;for(let i=0;i<starCount;i++){const x=(i*97.3+Math.sin(distance*.0005+i)*25)%W,y=(i*53.7+distance*(.12+i%3*.08))%(H*.65);ctx.fillStyle='rgba(190,230,255,'+(.2+(i%5)*.12)+')';ctx.fillRect(x,y,1.3,1.3)}
+ const hz=H*.23,base=H*.96;ctx.fillStyle='#101b33';ctx.beginPath();ctx.moveTo(W*.38,hz);ctx.lineTo(W*.62,hz);ctx.lineTo(W*.98,base);ctx.lineTo(W*.02,base);ctx.closePath();ctx.fill();
+ ctx.strokeStyle=t[1];ctx.globalAlpha=.55;ctx.lineWidth=2;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(W/2+i*W*.055,hz);ctx.lineTo(W/2+i*W*.27,base);ctx.stroke()}ctx.globalAlpha=1;
+ for(let k=0;k<13;k++){let p=((k/13+distance/430)%1);let y=hz+(p*p)*(base-hz);ctx.strokeStyle=t[2];ctx.globalAlpha=.08+p*.24;ctx.beginPath();ctx.moveTo(W/2-(W*.08+p*W*.4),y);ctx.lineTo(W/2+(W*.08+p*W*.4),y);ctx.stroke()}ctx.globalAlpha=1;
+ // portal
+ ctx.save();ctx.translate(W/2,hz+8);ctx.strokeStyle=t[1];ctx.shadowColor=t[1];ctx.shadowBlur=18;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,0,W*.12,17,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+ objects.forEach(o=>{const x=roadX(o.lane,o.z),y=hz+o.z*(H*.67),s=scaleZ(o.z);ctx.save();ctx.translate(x,y);if(o.type==='shard'){ctx.rotate(o.spin);ctx.shadowColor=t[1];ctx.shadowBlur=18;ctx.fillStyle=t[1];ctx.beginPath();ctx.moveTo(0,-13*s);ctx.lineTo(9*s,0);ctx.lineTo(0,13*s);ctx.lineTo(-9*s,0);ctx.closePath();ctx.fill();ctx.strokeStyle='#fff';ctx.stroke()}else{ctx.shadowColor=t[2];ctx.shadowBlur=14;ctx.fillStyle=t[2];ctx.fillRect(-14*s,-17*s,28*s,34*s);ctx.strokeStyle='#fff';ctx.strokeRect(-14*s,-17*s,28*s,34*s)}ctx.restore()});
+ // runner
+ const px=roadX(lane,1),py=playerY();ctx.save();ctx.translate(px,py);ctx.shadowColor=t[1];ctx.shadowBlur=22;ctx.fillStyle='#f4fbff';ctx.beginPath();ctx.arc(0,-22,10,0,Math.PI*2);ctx.fill();ctx.fillStyle=t[1];ctx.fillRect(-9,-11,18,25);ctx.strokeStyle=t[2];ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5,12);ctx.lineTo(-10,23);ctx.moveTo(5,12);ctx.lineTo(10,23);ctx.stroke();ctx.restore();
+ particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/.55);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3)});ctx.globalAlpha=1;
+ if(mode==='play'){ctx.fillStyle='#ffffff18';ctx.fillRect(12,12,W-24,4);ctx.fillStyle=t[1];ctx.fillRect(12,12,(W-24)*Math.min(1,shards/target),4)}
+}
+function end(win){mode='result';ui('result',true);const title=win?'عالم جديد انفتح!':'حاول مرة أخرى';$('resultTitle').textContent=title;$('resultTag').textContent=win?'إنجاز أسطوري':'لا تستسلم';$('resultText').textContent=win?'أكملت '+themes[world][0]+' وجمعت '+shards+' شظية. نتيجتك: '+score+'.':'اصطدمت بحاجز. نتيجتك '+score+' — أعد المحاولة واجمع الشظايا لتفتح البوابة.';$('nextBtn').classList.toggle('hidden',!win||world>=11);if(win){unlocked=Math.max(unlocked,Math.min(12,world+2));localStorage.setItem('nr-unlocked',unlocked);tone(740,.18,'triangle');setTimeout(()=>tone(980,.25,'triangle'),150)}else tone(130,.25,'sawtooth');buildLevels()}
+function loop(now){if(mode!=='play')return;const dt=Math.min(.035,(now-last)/1000||0);last=now;distance+=speed*dt;score+=Math.floor(speed*dt/9);speed+=dt*(2.3+world*.22);spawn-=dt;if(spawn<=0){spawnObject();spawn=Math.max(.42,1.02-world*.035)*(.72+Math.random()*.65)}
+ if(jump>0)jump=Math.max(0,jump-dt*1.45);
+ objects.forEach(o=>{o.z+=dt*(.38+world*.012);o.spin+=dt*3;if(o.z>.86&&o.z<1.04&&o.lane===lane){if(o.type==='shard'){o.z=2;shards++;score+=100;burst(roadX(lane,1),playerY()-20,themes[world][1]);tone(760+Math.random()*250,.09,'sine',.04);hud();if(shards>=target){end(true)}}else if(jump<.2){o.z=2;shake=8;burst(roadX(lane,1),playerY(),themes[world][2]);end(false)}}});
+ objects=objects.filter(o=>o.z<1.18);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0);
+ if(score>best){best=score;localStorage.setItem('nr-best',best);$('best').textContent=best}
+ draw();raf=requestAnimationFrame(loop)}
+$('startBtn').onclick=()=>{world=Math.min(world,unlocked-1);start()};$('levelsBtn').onclick=()=>{buildLevels();ui('menu',false);ui('levelMenu',true)};$('backBtn').onclick=()=>{ui('levelMenu',false);ui('menu',true)};
+$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('retryBtn').onclick=start;$('homeBtn').onclick=()=>{mode='menu';ui('result',false);ui('menu',true);draw()};$('nextBtn').onclick=()=>{world=Math.min(11,world+1);start()};
+$('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent=sound?'♫ الصوت':'♪ صامت';if(sound)tone(500,.1)};
+$('leftBtn').onpointerdown=e=>{e.preventDefault();move(-1)};$('rightBtn').onpointerdown=e=>{e.preventDefault();move(1)};$('jumpBtn').onpointerdown=e=>{e.preventDefault();leap()};
+let sx=0,sy=0;$('arena').addEventListener('touchstart',e=>{const t=e.changedTouches[0];sx=t.clientX;sy=t.clientY},{passive:true});$('arena').addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>28){move(dx>0?-1:1)}else if(Math.abs(dy)>25&&dy<0){leap()}},{passive:true});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')move(-1);if(e.key==='ArrowRight'||e.key==='d')move(1);if(e.key===' '||e.key==='ArrowUp')leap();if(e.key==='Escape')pause()});
+hud();draw();
+})();
+</script>
+</body></html>
