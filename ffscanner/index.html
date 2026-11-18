@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101114"><title>FFScanner ULTRA</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--line:#30333b;--orange:#ff7a18;--muted:#a8abb4}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#49250f 0,transparent 34%),var(--bg);color:#f6f6f7;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;min-height:100vh}
+main{width:min(760px,100%);margin:auto;padding:26px 16px 50px}.brand{display:flex;align-items:center;gap:12px;margin:8px 0 24px}.logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ff9b35,#e34b0d);display:grid;place-items:center;font-size:25px;box-shadow:0 8px 28px #ff741b40}.brand h1{font-size:22px;margin:0;letter-spacing:1px}.brand p{margin:3px 0;color:var(--muted);font-size:12px}
+.panel,.card{background:linear-gradient(145deg,#1c1e24,#15171b);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 12px 35px #0003}
+label{display:block;font-size:13px;color:#d7d8dc;margin-bottom:8px}input,select{width:100%;background:#101216;border:1px solid #3b3e47;border-radius:11px;padding:14px;color:white;font:inherit;outline:none}input:focus,select:focus{border-color:var(--orange)}
+.row{display:grid;grid-template-columns:1fr 125px;gap:10px}button{width:100%;margin-top:12px;border:0;border-radius:11px;padding:14px;background:linear-gradient(90deg,#ff8b24,#e95712);color:#17100a;font-weight:800;font-size:15px}
+.note,.muted{color:var(--muted);font-size:12px;line-height:1.7}.error{color:#ff9b83}.profile{display:flex;align-items:center;gap:14px}.avatar{width:76px;height:76px;object-fit:cover;border-radius:16px;background:#292c33;border:1px solid #4b4e57}.name{font-size:19px;font-weight:800}.uid{color:var(--muted);font-size:12px;direction:ltr;text-align:right}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:#111318;border:1px solid #292c33;border-radius:12px;padding:12px}.stat small{display:block;color:var(--muted);font-size:11px}.stat b{display:block;margin-top:5px;font-size:17px;overflow-wrap:anywhere}.section-title{font-size:14px;color:#ff9a42;margin:2px 0 12px}.hidden{display:none}.tag{display:inline-block;background:#3a2416;color:#ffad67;border-radius:20px;padding:4px 9px;font-size:11px;margin-top:6px}
+footer{text-align:center;color:#777b85;font-size:11px;margin-top:25px}
+@media(max-width:420px){main{padding:18px 12px 35px}.panel,.card{padding:14px}.grid{gap:8px}.stat{padding:10px}.stat b{font-size:15px}}
+</style></head>
+<body><main>
+<header class="brand"><div class="logo">🔥</div><div><h1>FREE FIRE SCANNER</h1><p>ULTRA PLAYER LOOKUP · COMMUNITY TOOL</p></div></header>
+<section class="panel">
+<label for="uid">معرّف اللاعب UID</label>
+<div class="row"><input id="uid" inputmode="numeric" placeholder="أدخل Player UID" maxlength="24"><select id="region" aria-label="Region"><option value="ME">ME</option><option value="IND">IND</option><option value="BR">BR</option><option value="SG">SG</option><option value="US">US</option><option value="ID">ID</option><option value="TH">TH</option><option value="EU">EU</option></select></div>
+<button id="scan">🔎 فحص الحساب</button><p id="status" class="note">أدخل UID ثم اضغط فحص. لا تدخل كلمة مرور أو رمز تحقق.</p>
+</section>
+<section id="result" class="hidden">
+<div class="card"><div class="profile"><img id="avatar" class="avatar" alt="Player avatar"><div><div id="nickname" class="name">—</div><div id="playerid" class="uid"></div><span id="server" class="tag"></span></div></div></div>
+<div class="card"><div class="section-title">📊 معلومات الحساب</div><div id="basic" class="grid"></div></div>
+<div class="card"><div class="section-title">🏆 الرتب</div><div id="ranks" class="grid"></div></div>
+<div class="card"><div class="section-title">🐾 الحيوان الأليف</div><div id="pet" class="grid"></div></div>
+<div class="card"><div class="section-title">🎒 عناصر الحساب (IDs)</div><div id="items" class="grid"></div></div>
+<p class="note">المعلومات المعروضة هي فقط ما توفره واجهة البيانات الخارجية. قد لا تتوفر إحصائيات المباريات أو أسماء الأزياء والأسلحة.</p>
+</section>
+<footer>FFScanner ULTRA · مصدر البيانات: NF Token API غير رسمي · لا تجمع هذه الصفحة كلمات المرور أو رموز الدخول.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function stat(label,value){const d=document.createElement('div');d.className='stat';const s=document.createElement('small');s.textContent=label;const b=document.createElement('b');b.textContent=value===undefined||value===null||value===''?'—':String(value);d.append(s,b);return d}
+function fill(id,items){const el=$(id);el.replaceChildren();items.forEach(x=>el.append(stat(x[0],x[1])))}
+function date(v){if(!v)return '—';const n=Number(v);if(!Number.isFinite(n))return String(v);return new Date(n*1000).toLocaleString('ar-DZ')}
+$('scan').addEventListener('click',async()=>{
+ const uid=$('uid').value.trim(),region=$('region').value;
+ if(!/^\d{5,24}$/.test(uid)){$('status').textContent='أدخل UID رقمي صحيح.';$('status').className='note error';return}
+ $('scan').disabled=true;$('scan').textContent='جارٍ الفحص…';$('status').textContent='نتصل بمصدر البيانات…';$('status').className='note';$('result').classList.add('hidden');
+ try{
+  const response=await fetch('https://api2.nftoken.info/player-info?uid='+encodeURIComponent(uid));
+  if(!response.ok)throw new Error('API HTTP '+response.status);
+  const data=await response.json(),b=data.basicInfo||{},p=data.profileInfo||{},pet=data.petInfo||{},social=data.socialInfo||{},media=data.mediaInfo||{},clan=data.clanBasicInfo||{};
+  if(!b.accountId&&!b.nickname)throw new Error('لم يتم العثور على الحساب');
+  $('nickname').textContent=b.nickname||'Player';$('playerid').textContent='UID: '+(b.accountId||uid);$('server').textContent='SERVER: '+(b.region||region);
+  const raw=media.avatarUrl||'';let image=raw.startsWith('/')?'https://api2.nftoken.info'+raw:raw;
+  $('avatar').src=image||'';$('avatar').onerror=()=>{$('avatar').removeAttribute('src')};
+  fill('basic',[['المستوى',b.level],['الخبرة XP',b.exp],['الإعجابات',b.liked],['تاريخ الإنشاء',date(b.createAt)],['آخر دخول',date(b.lastLoginAt)],['السمعة',data.creditScoreInfo?.creditScore],['الشارات',b.badgeCnt],['الموسم',b.seasonId],['اللغة',social.language],['النقابة',clan.clanName||'غير متاحة']]);
+  fill('ranks',[['BR Rank',b.rank],['BR Points',b.rankingPoints],['CS Rank',b.csRank],['CS Points',b.csRankingPoints]]);
+  fill('pet',[['الاسم',pet.name],['المستوى',pet.level],['Pet ID',pet.id],['Skin ID',pet.skinId],['Skill ID',pet.selectedSkillId]]);
+  fill('items',[['Avatar ID',p.avatarId],['Skin Color ID',p.skinColor],['Clothes IDs',(p.clothes||[]).join(', ')],['Weapon Skin IDs',(b.weaponSkinShows||[]).join(', ')],['Skills IDs',(p.equipedSkills||[]).join(', ')],['Title ID',b.title]]);
+  $('result').classList.remove('hidden');$('status').textContent='تم جلب البيانات المتاحة.';$('status').className='note';
+ }catch(e){$('status').textContent='تعذر جلب البيانات: '+e.message+'. قد يمنع المتصفح الاتصال المباشر بمصدر البيانات (CORS) أو يكون المصدر متوقفاً.';$('status').className='note error'}
+ finally{$('scan').disabled=false;$('scan').textContent='🔎 فحص الحساب'}
+});
+</script></body></html>
